@@ -1,6 +1,6 @@
 const { ApolloServer, gql, PubSub } = require('apollo-server');
 
-const pubsub = new PubSub
+const pubsub = new PubSub()
 
 // A schema is a collection of type definitions (hence "typeDefs")
 // that together define the "shape" of queries that are executed against
