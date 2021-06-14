@@ -1,41 +1,36 @@
 const { ApolloServer, gql, PubSub } = require('apollo-server');
 
-const pubsub = new PubSub()
-
 // A schema is a collection of type definitions (hence "typeDefs")
-// that together define the "shape" of queries that are executed against
-// your data.
 const typeDefs = gql`
-  # Comments in GraphQL strings (such as this one) start with the hash (#) symbol.
-
   # This "Book" type defines the queryable fields for every book in our data source.
   type Book {
     title: String
     author: String
   }
 
-
-  # The "Query" type is special: it lists all of the available queries that
-  # clients can execute, along with the return type for each. In this
-  # case, the "books" query returns an array of zero or more Books (defined above).
+  # Query
   type Query {
     books: [Book]
   }
 
+  # Input type for mutation
   input BookInput {
     title: String
     author: String
   }
 
+  # Mutation
   type Mutation {
     createBook(input: BookInput): Book
   }
 
+  # Subscription
   type Subscription {
-    newBook: Book
+    newBook: Book!
   }
 `
 
+// In-memory database using list
 const books = [
   {
     title: 'The Awakening',
@@ -46,7 +41,9 @@ const books = [
     author: 'Paul Auster',
   },
 ]
-  
+
+const pubsub = new PubSub()
+
 // Resolvers define the technique for fetching the types defined in the
 // schema. This resolver retrieves books from the "books" array above.
 const resolvers = {
@@ -55,13 +52,14 @@ const resolvers = {
   },
   Mutation: {
     createBook: (_, { input }) => {
+      // create new book
       const newbook = {
         author: input.author,
         title: input.title
       }
-
+      // store book to list
       books.push(newbook)
-
+      // notify subscription "newBook"
       pubsub.publish('NEW_BOOK', newbook)
 
       return newbook
@@ -70,17 +68,18 @@ const resolvers = {
   Subscription: {
     newBook: {
       subscribe: () => {
+        // handle topic subscription
         return pubsub.asyncIterator('NEW_BOOK')
       },
       resolve: payload => {
+        // handle notification for topic
         return payload
       }
     }
   }
 }
   
-// The ApolloServer constructor requires two parameters: your schema
-// definition and your set of resolvers.
+// instantiate apollo server
 const server = new ApolloServer({
   typeDefs,
   resolvers,
@@ -92,7 +91,7 @@ const server = new ApolloServer({
   }
 })
 
-// The `listen` method launches a web server.
+// start server
 server.listen().then(({ url }) => {
   console.log(`🚀  Server ready at ${url}`);
 })
