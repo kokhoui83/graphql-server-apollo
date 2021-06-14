@@ -1,4 +1,6 @@
-const { ApolloServer, gql } = require('apollo-server');
+const { ApolloServer, gql, PubSub } = require('apollo-server');
+
+const pubsub = new PubSub
 
 // A schema is a collection of type definitions (hence "typeDefs")
 // that together define the "shape" of queries that are executed against
@@ -28,45 +30,70 @@ const typeDefs = gql`
   type Mutation {
     createBook(input: BookInput): Book
   }
-`;
+
+  type Subscription {
+    newBook: Book
+  }
+`
 
 const books = [
-    {
-      title: 'The Awakening',
-      author: 'Kate Chopin',
-    },
-    {
-      title: 'City of Glass',
-      author: 'Paul Auster',
-    },
-  ];
+  {
+    title: 'The Awakening',
+    author: 'Kate Chopin',
+  },
+  {
+    title: 'City of Glass',
+    author: 'Paul Auster',
+  },
+]
   
 // Resolvers define the technique for fetching the types defined in the
 // schema. This resolver retrieves books from the "books" array above.
 const resolvers = {
-    Query: {
-      books: () => books,
-    },
-    Mutation: {
-      createBook: (_, { input }) => {
-        const newbook = {
-          author: input.author,
-          title: input.title
-        }
+  Query: {
+    books: () => books,
+  },
+  Mutation: {
+    createBook: (_, { input }) => {
+      const newbook = {
+        author: input.author,
+        title: input.title
+      }
 
-        books.push(newbook)
+      books.push(newbook)
 
-        return newbook
+      pubsub.publish('NEW_BOOK', newbook)
+
+      return newbook
+    }
+  },
+  Subscription: {
+    newBook: {
+      subscribe: () => {
+        return pubsub.asyncIterator('NEW_BOOK')
+      },
+      resolve: payload => {
+        return payload
       }
     }
-  };
+  }
+}
   
 // The ApolloServer constructor requires two parameters: your schema
 // definition and your set of resolvers.
-const server = new ApolloServer({ typeDefs, resolvers });
+const server = new ApolloServer({
+  typeDefs,
+  resolvers,
+  context: ({ req }) => {
+    return {
+      ...req,
+      pubsub
+    }
+  }
+})
 
 // The `listen` method launches a web server.
 server.listen().then(({ url }) => {
   console.log(`🚀  Server ready at ${url}`);
-});
+})
     
