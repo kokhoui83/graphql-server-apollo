@@ -92,7 +92,7 @@ const server = new ApolloServer({
 })
 
 // start server
-server.listen().then(({ url }) => {
+server.listen({ host: '0.0.0.0', port: 4000 }).then(({ url }) => {
   console.log(`🚀  Server ready at ${url}`);
 })
     
