@@ -50,3 +50,7 @@ subscription {
   }
 }
 ```
+
+# TODO
+- Update to apollo server v3
+  - https://www.apollographql.com/docs/apollo-server/migration/
