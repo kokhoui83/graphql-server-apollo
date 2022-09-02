@@ -1,4 +1,5 @@
-const { ApolloServer, gql, PubSub } = require('apollo-server')
+const { ApolloServer, gql } = require('apollo-server')
+const { PubSub } = require('graphql-subscriptions')
 
 // A schema is a collection of type definitions (hence "typeDefs")
 const typeDefs = gql`
