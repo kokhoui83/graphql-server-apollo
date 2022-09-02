@@ -1,7 +1,7 @@
 # GraphQL Server using Apollo
 
 ## Dependencies
-- node 14.15.3
+- node 18.7.0
 
 ## Setup
 - Install node dependencies
